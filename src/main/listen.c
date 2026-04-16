@@ -409,7 +409,6 @@ int rad_status_server(REQUEST *request)
 
 			return 0;
 		}
-		PTHREAD_MUTEX_UNLOCK(&sock->mutex);
 	}
 #endif
 
