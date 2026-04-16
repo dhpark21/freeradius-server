@@ -575,6 +575,7 @@ retry:
 		 *	This entry was marked to be stopped.  Acknowledge it.
 		 */
 		request->child_state = REQUEST_DONE;
+		request = NULL;
 	}
 
 	/*
@@ -631,6 +632,7 @@ retry:
 		VERIFY_REQUEST(request);
 		request->child_state = REQUEST_DONE;
 		thread_pool.num_queued--;
+		request = NULL;
 	}
 
 	start = 0;
