@@ -3774,7 +3774,7 @@ rad_listen_t *proxy_new_listener(TALLOC_CTX *ctx, home_server_t *home, uint16_t 
 		/*
 		 *	Also set TCP_NODELAY, to force the data to be written quickly.
 		 */
-		if (sock->proto == IPPROTO_TCP) {
+		{
 			int on = 1;
 
 			if (setsockopt(this->fd, SOL_TCP, TCP_NODELAY, &on, sizeof(on)) < 0) {
@@ -3783,59 +3783,15 @@ rad_listen_t *proxy_new_listener(TALLOC_CTX *ctx, home_server_t *home, uint16_t 
 			}
 		}
 #endif
+		rad_assert(home->listeners != NULL);
 
-		/*
-		 *	Set non-blocking if it's configured.
-		 */
-		if (this->nonblock) {
-			if (fr_nonblock(this->fd) < 0) {
-				ERROR("(TLS) Failed setting nonblocking for proxy socket '%s' - %s", buffer, fr_strerror());
-				goto error;
-			}
-
-			rad_assert(home->listeners != NULL);
-
-			if (!rbtree_insert(home->listeners, this)) {
-				ERROR("(TLS) Failed adding tracking information for proxy socket '%s'", buffer);
-				goto error;
-			}
-
-		} else {
-			/*
-			 *	Only set timeouts when the socket is blocking.  This allows blocking
-			 *	sockets to still time out when the underlying socket is dead.
-			 */
-#ifdef SO_RCVTIMEO
-			if (sock->limit.read_timeout) {
-				struct timeval tv;
-
-				tv.tv_sec = sock->limit.read_timeout;
-				tv.tv_usec = 0;
-
-				if (setsockopt(this->fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-					ERROR("(TLS) Failed to set read_timeout: %s", fr_syserror(errno));
-					goto error;
-				}
-			}
-#endif
-
-#ifdef SO_SNDTIMEO
-			if (sock->limit.write_timeout) {
-				struct timeval tv;
-
-				tv.tv_sec = sock->limit.write_timeout;
-				tv.tv_usec = 0;
-
-				if (setsockopt(this->fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0) {
-					ERROR("(TLS) Failed to set write_timeout: %s", fr_syserror(errno));
-					goto error;
-				}
-			}
-#endif
+		if (!rbtree_insert(home->listeners, this)) {
+			ERROR("(TLS) Failed adding tracking information for proxy socket '%s'", buffer);
+			goto error;
 		}
 
 		/*
-		 *	This is blocking.  :(
+		 *	Start a new client connection.
 		 */
 		sock->ssn = tls_new_client_session(sock, home->tls, this->fd, &sock->certs);
 		if (!sock->ssn) {
