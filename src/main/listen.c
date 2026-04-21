@@ -1649,6 +1649,10 @@ static int listener_cmp(void const *one, void const *two)
 
 static int listener_unlink(UNUSED void *ctx, UNUSED void *data)
 {
+	/*
+	 *	The child listener can stay active, even if the parent one is closed.
+	 */
+
 	return 2;		/* unlink this node from the tree */
 }
 #endif
@@ -2049,7 +2053,7 @@ int common_socket_parse(CONF_SECTION *cs, rad_listen_t *this)
 		 *	matters when we're tearing down the server, so
 		 *	perhaps it's less relevant.
 		 */
-		this->children = rbtree_create(this, listener_cmp, NULL, 0);
+		this->children = rbtree_create(this, listener_cmp, NULL, RBTREE_FLAG_LOCK);
 		if (!this->children) {
 			cf_log_err_cs(cs, "Failed to create child list for TCP socket.");
 			return -1;
@@ -3564,6 +3568,7 @@ static int _listener_free(rad_listen_t *this)
 		 */
 		if (this->parent) {
 			rbtree_deletebydata(this->parent->children, this);
+			this->parent = NULL;
 		}
 
 		/*
@@ -3571,6 +3576,8 @@ static int _listener_free(rad_listen_t *this)
 		 */
 		if (this->children) {
 			rbtree_walk(this->children, RBTREE_DELETE_ORDER, listener_unlink, this);
+			rbtree_free(this->children);
+			this->children = NULL;
 		}
 
 #ifdef WITH_TLS
