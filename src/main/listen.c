@@ -3715,7 +3715,8 @@ rad_listen_t *proxy_new_listener(TALLOC_CTX *ctx, home_server_t *home, uint16_t 
 
 #ifdef WITH_TLS
 		this->nonblock |= home->nonblock;
-		this->nonblock |= (this->tls != NULL);		// TLS connections are always nonblocking.
+		this->nonblock |= (this->tls != NULL);		// incoming TLS connections are always nonblocking.
+		this->nonblock |= (home->tls != NULL);		// outgoing TLS connections are always nonblocking
 #endif
 
 		/*
@@ -3890,7 +3891,7 @@ rad_listen_t *proxy_new_listener(TALLOC_CTX *ctx, home_server_t *home, uint16_t 
 			close(this->fd);
 			home->last_failed_open = now;
 #ifdef WITH_TLS
-			if (home->listeners && this->nonblock) rbtree_deletebydata(home->listeners, this);
+			if (home->listeners) rbtree_deletebydata(home->listeners, this);
 #endif
 			listen_free(&this);
 			return NULL;
