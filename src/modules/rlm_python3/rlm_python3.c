@@ -33,6 +33,7 @@ RCSID("$Id$")
 #include <freeradius-devel/radiusd.h>
 #include <freeradius-devel/modules.h>
 #include <freeradius-devel/rad_assert.h>
+#include <freeradius-devel/lsan.h>
 
 #include <Python.h>
 #include <dlfcn.h>
@@ -882,7 +883,7 @@ static int python_function_load(char const *name, python_func_def_t *def)
 		return -1;
 	}
 
-	def->module = PyImport_ImportModule(def->module_name);
+	LSAN_DISABLE(def->module = PyImport_ImportModule(def->module_name));
 	if (!def->module) {
 		ERROR("%s - Module '%s' not found", __func__, def->module_name);
 
@@ -1161,7 +1162,7 @@ static int python_interpreter_init(rlm_python_t *inst, CONF_SECTION *conf)
 				return -1;
 			}
 
-			status = Py_InitializeFromConfig(&config);
+			LSAN_DISABLE(status = Py_InitializeFromConfig(&config));
 			if (PyStatus_Exception(status)) {
 				PyConfig_Clear(&config);
 				return -1;
@@ -1410,7 +1411,7 @@ static int mod_detach(void *instance)
 
 	if ((--python_instances) == 0) {
 		PyEval_RestoreThread(main_interpreter); /* Swap to the main thread */
-		Py_Finalize();
+		LSAN_DISABLE(Py_Finalize());
 		dlclose(python_dlhandle);
 	}
 
