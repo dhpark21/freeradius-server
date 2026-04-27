@@ -196,6 +196,8 @@ int	fr_log_close(fr_log_t *log) CC_HINT(nonnull);
 
 TALLOC_CTX *fr_log_pool_init(void);
 
+void	fr_log_disable_pools(void);
+
 int	fr_log_global_init(fr_event_list_t *el, bool daemonize)	CC_HINT(nonnull);
 
 void	fr_log_global_free(void);

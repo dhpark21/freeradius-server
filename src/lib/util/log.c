@@ -29,6 +29,7 @@ RCSID("$Id$")
 #include <freeradius-devel/util/value.h>
 
 #include <fcntl.h>
+#include <stdatomic.h>
 #ifdef HAVE_FEATURES_H
 #  include <features.h>
 #endif
@@ -40,6 +41,23 @@ FILE	*fr_log_fp = NULL;
 int	fr_debug_lvl = 0;
 
 static _Thread_local TALLOC_CTX *fr_log_pool;
+
+/** Latched once shutdown has freed every thread's log pool
+ *
+ * `fr_atexit_thread_trigger_all()` runs every registered thread destructor
+ * on the calling (main) thread, so it frees the log pool memory for threads
+ * whose TLS slot it can't reach (librdkafka's bg threads, anything spawned
+ * by a third-party library that bypasses our schedule).  Those threads
+ * still hold the now-dangling pointer in their `_Thread_local fr_log_pool`,
+ * and will hand it to `talloc_new` on the next log call - "Bad talloc magic
+ * value" abort.
+ *
+ * Once set, `fr_log_pool_init()` ignores the TLS slot entirely and returns
+ * NULL; downstream `talloc_new(NULL)` / `talloc_asprintf(NULL, ...)` calls
+ * just allocate top-level chunks for the duration of the log line.  No
+ * pooling, no TLS, safe from any thread.
+ */
+static atomic_bool log_pools_disabled;
 
 static uint32_t location_indent = 30;
 static fr_event_list_t *log_el;			//!< Event loop we use for process logging data.
@@ -303,16 +321,37 @@ static int _fr_log_pool_free(void *arg)
 	return 0;
 }
 
+/** Disable per-thread log pools for the rest of the process lifetime
+ *
+ * Call this from the main thread immediately after
+ * `fr_atexit_thread_trigger_all()`, which frees every other thread's log
+ * pool but can't reset their `_Thread_local` slot.  After this returns,
+ * subsequent `fr_log` calls fall back to `talloc_new(NULL)` instead of
+ * touching the (now dangling) TLS pool pointer.
+ */
+void fr_log_disable_pools(void)
+{
+	atomic_store_explicit(&log_pools_disabled, true, memory_order_relaxed);
+}
+
 /** talloc ctx to use when composing log messages
  *
  * Functions must ensure that they allocate a new ctx from the one returned
  * here, and that this ctx is freed before the function returns.
  *
- * @return talloc pool to use for scratch space.
+ * @return talloc pool to use for scratch space, or NULL if pools have been
+ *	disabled - callers must tolerate a NULL return.
  */
 TALLOC_CTX *fr_log_pool_init(void)
 {
 	TALLOC_CTX	*pool;
+
+	/*
+	 *	Post-trigger of every thread atexit handler the TLS slot
+	 *	may be a dangling pointer for any thread we don't own
+	 *	(librdkafka's bg threads etc.) - skip the pool entirely.
+	 */
+	if (unlikely(atomic_load_explicit(&log_pools_disabled, memory_order_relaxed))) return NULL;
 
 	pool = fr_log_pool;
 	if (unlikely(!pool)) {

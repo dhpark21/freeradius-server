@@ -1123,6 +1123,18 @@ cleanup:
 	(void) fr_schedule_destroy(&sc);
 
 	/*
+	 *	Threads not managed by the schedule (e.g. librdkafka's
+	 *	bg threads) hold a `_Thread_local fr_log_pool` we can't
+	 *	clear from this thread.  `fr_atexit_thread_trigger_all`
+	 *	below frees the underlying chunks, leaving those slots
+	 *	dangling.  Flip the logger into pool-less mode first so
+	 *	any log line that races the trigger - or fires after it -
+	 *	goes through `talloc_new(NULL)` instead of dereferencing
+	 *	a freed pool.
+	 */
+	fr_log_disable_pools();
+
+	/*
 	 *	Ensure all thread local memory is cleaned up
 	 *	before we start cleaning up global resources.
 	 *	This is necessary for single threaded mode
