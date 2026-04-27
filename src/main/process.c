@@ -3870,7 +3870,7 @@ do_home:
 			vp = fr_pair_afrom_num(request->proxy, PW_USER_NAME, 0);
 			if (vp) fr_pair_prepend(&request->proxy->vps, vp);
 		}
-		fr_pair_value_strcpy(vp, strippedname->vp_strvalue);
+		if (vp) fr_pair_value_strcpy(vp, strippedname->vp_strvalue);
 
 		/*
 		 *	Do NOT delete Stripped-User-Name.
