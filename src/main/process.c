@@ -6279,6 +6279,7 @@ static void event_new_fd(void *ctx)
 		 *	No one is using the socket.  We can remove it now.
 		 */
 		this->status = RAD_LISTEN_STATUS_REMOVE_NOW;
+		goto remove_now;
 	} /* socket is at EOL */
 
 	/*
@@ -6295,6 +6296,7 @@ static void event_new_fd(void *ctx)
 		fr_event_fd_delete(el, 0, this->fd);
 		this->dead = true;
 
+	remove_now:
 		/*
 		 *      Re-open the socket, pointing it to /dev/null.
 		 *      This means that all writes proceed without
