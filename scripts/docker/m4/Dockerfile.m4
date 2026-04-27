@@ -27,6 +27,7 @@ ifelse(
 	D_NAME, [ubuntu20],	[p_SET([deb], [ubuntu],	[20],	[focal],	[ubuntu:20.04])],
 	D_NAME, [ubuntu22],	[p_SET([deb], [ubuntu],	[22],	[jammy],	[ubuntu:22.04])],
 	D_NAME, [ubuntu24],	[p_SET([deb], [ubuntu],	[24],	[noble],	[ubuntu:24.04])],
+	D_NAME, [ubuntu26],	[p_SET([deb], [ubuntu], [26],	[resolute],	[ubuntu:26.04])],
 	D_NAME, [centos7],	[p_SET([rpm], [centos],	[7],	[7],		[centos:7])],
 	D_NAME, [centos8],	[p_SET([rpm], [centos],	[8],	[8],		[centos:8])],
 	D_NAME, [rocky8],	[p_SET([rpm], [rocky],	[8],	[8],		[rockylinux/rockylinux:8])],
