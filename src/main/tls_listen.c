@@ -102,6 +102,15 @@ static void tls_socket_close(rad_listen_t *listener)
 	 */
 }
 
+void proxy_tls_close(rad_listen_t *listener)
+{
+	listen_socket_t *sock = listener->data;
+
+	PTHREAD_MUTEX_LOCK(&sock->mutex);
+	tls_socket_close(listener);
+	PTHREAD_MUTEX_UNLOCK(&sock->mutex);
+}
+
 static void tls_write_available(fr_event_list_t *el, int sock, void *ctx);
 
 /*

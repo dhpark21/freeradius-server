@@ -6297,6 +6297,21 @@ static void event_new_fd(void *ctx)
 		this->dead = true;
 
 	remove_now:
+#ifdef WITH_TLS
+		/*
+		 *	Close it.  Which sets the status to EOL, so we
+		 *	have to update that, too.
+		 *
+		 *	proxy_tls_close also clears this->tls, so it's
+		 *	safe run this check multiple times, as the
+		 *	second time it won't close the same socket.
+		 */
+		if ((this->type == RAD_LISTEN_PROXY) && this->tls) {
+			proxy_tls_close(this);
+			this->status = RAD_LISTEN_STATUS_REMOVE_NOW;
+		}
+#endif
+
 		/*
 		 *      Re-open the socket, pointing it to /dev/null.
 		 *      This means that all writes proceed without

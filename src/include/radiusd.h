@@ -587,6 +587,9 @@ int	fr_bool_auto_parse(CONF_PAIR *cp, fr_bool_auto_t *out, char const *str);
 void listen_free(rad_listen_t **head);
 int listen_init(CONF_SECTION *cs, rad_listen_t **head, bool spawn_flag);
 rad_listen_t *proxy_new_listener(TALLOC_CTX *ctx, home_server_t *home, uint16_t src_port);
+#ifdef WITH_TLS
+void proxy_tls_close(rad_listen_t *listener);
+#endif
 RADCLIENT *client_listener_find(rad_listen_t *listener, fr_ipaddr_t const *ipaddr, uint16_t src_port);
 
 #ifdef WITH_STATS
