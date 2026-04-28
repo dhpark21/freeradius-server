@@ -19,7 +19,7 @@ RUN apt-get update && \
 
 RUN apt-get update && \
 #  Development utilities
-    apt-get install -y devscripts equivs git quilt rsync fakeroot && \
+    apt-get install -y devscripts equivs git quilt rsync fakeroot curl && \
 #  Compilers
     apt-get install -y g++ llvm clang lldb && \
 #  eapol_test dependencies

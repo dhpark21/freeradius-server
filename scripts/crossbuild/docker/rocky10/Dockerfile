@@ -6,6 +6,7 @@
 ARG from=rockylinux/rockylinux:10
 FROM ${from} as build
 
+
 #
 #  Install yum
 #
