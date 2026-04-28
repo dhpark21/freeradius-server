@@ -74,7 +74,9 @@ static void dump_hex(char const *msg, uint8_t const *data, size_t data_len)
 /*
  *	Called with the mutex held.
  */
-static void tls_socket_close(rad_listen_t *listener)
+void tls_socket_close(rad_listen_t *listener);
+
+void tls_socket_close(rad_listen_t *listener)
 {
 	listen_socket_t *sock = listener->data;
 	REQUEST *request = sock->request;

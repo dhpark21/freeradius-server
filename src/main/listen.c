@@ -391,6 +391,8 @@ static void listener_coa_update(rad_listen_t *this, VALUE_PAIR *vps);
 #  define TLS_FREE(_x)
 #endif
 
+void tls_socket_close(rad_listen_t *listener);
+
 /*
  *	Process and reply to a server-status request.
  *	Like rad_authenticate and rad_accounting this should
@@ -440,10 +442,7 @@ int rad_status_server(REQUEST *request)
 				RWDEBUG("(TLS) Connection is not authorized - closing TCP socket.");
 				request->reply->code = PW_CODE_ACCESS_REJECT;
 
-				rad_free(&sock->packet);
-				TLS_FREE(sock->request);
-				listener->status = RAD_LISTEN_STATUS_EOL;
-				listener->tls = NULL; /* parent owns this! */
+				tls_socket_close(listener);
 			}
 
 			PTHREAD_MUTEX_UNLOCK(&sock->mutex);
