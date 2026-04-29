@@ -92,7 +92,6 @@ void tls_socket_close(rad_listen_t *listener)
 	ROPTIONAL(RDEBUG3, DEBUG3, "(TLS) Closing connection");
 	rad_free(&sock->packet);
 	TALLOC_FREE(sock->request);
-	TALLOC_FREE(sock->ssn);
 	radius_update_listener(listener);
 
 	/*
