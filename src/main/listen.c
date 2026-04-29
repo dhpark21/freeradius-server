@@ -1261,6 +1261,7 @@ static int dual_tcp_accept(rad_listen_t *listener)
 	memcpy(this->data, listener->data, sizeof(*sock));
 	memcpy(this, listener, sizeof(*this));
 	this->next = NULL;
+	this->children = NULL;
 	this->data = sock;	/* fix it back */
 #ifdef WITH_TCP
 	this->nonblock = listener->nonblock;
