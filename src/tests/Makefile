@@ -63,7 +63,7 @@ $(BUILD_PATH)/tests/eapol_test/eapol_test.mk: | $(BUILD_PATH)/tests/eapol_test
 	${Q}echo "EAPOL_TEST=$(EAPOL_TEST_BIN)" > $@
 	${Q}echo "TLS1_3=$(shell openssl ciphers -s -v 'ECDHE:!COMPLEMENTOFDEFAULT'| grep -q 'TLSv1.3' && echo yes)" >> $@
 	${Q}echo "OPENSSL_OK=$(shell openssl version | grep -v ' 1\.0' >/dev/null && echo yes)" >> $@
-	${Q}echo "OPENSSL3_OK=$(shell openssl version | grep -q ' OpenSSL 3\.0' && echo yes)" >> $@
+	${Q}echo "OPENSSL3_OK=$(shell openssl version | grep -q ' OpenSSL 3\.' && echo yes)" >> $@
 else
 #
 #  No OpenSSL means that we don't even try to build eapol_test
